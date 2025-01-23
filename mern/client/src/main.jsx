@@ -5,9 +5,15 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import App from "./App";
-import Record from "./components/record";
-import RecordList from "./components/recordlist";
 import "./index.css";
+import CampaignOverview from "./components/campaignoverview";
+import LocationOverview from "./components/locationoverview";
+import CharacterOverview from "./components/characteroverview";
+import Notes from "./components/notes";
+import MonsterOverview from "./components/monsteroverview";
+import ItemOverview from "./components/itemoverview";
+import APISearch from "./components/search";
+import Rulebook from "./components/rulebook";
 
 const router = createBrowserRouter([
   {
@@ -16,27 +22,77 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <RecordList />,
+        element: <CampaignOverview />,
       },
     ],
   },
   {
-    path: "/edit/:id",
+    path: "/locations",
     element: <App />,
     children: [
       {
-        path: "/edit/:id",
-        element: <Record />,
+        path: "/locations",
+        element: <LocationOverview />,
       },
     ],
   },
   {
-    path: "/create",
+    path: "/notes",
     element: <App />,
     children: [
       {
-        path: "/create",
-        element: <Record />,
+        path: "/notes",
+        element: <Notes />,
+      },
+    ],
+  },
+  {
+    path: "/characters",
+    element: <App />,
+    children: [
+      {
+        path: "/characters",
+        element: <CharacterOverview />,
+      },
+    ],
+  },
+  {
+    path: "/monsters",
+    element: <App />,
+    children: [
+      {
+        path: "/monsters",
+        element: <MonsterOverview/>
+      },
+    ],
+  },
+  {
+    path: "/items",
+    element: <App />,
+    children: [
+      {
+        path: "/items",
+        element: <ItemOverview/>
+      },
+    ],
+  },
+  {
+    path: "/search",
+    element: <App />,
+    children: [
+      {
+        path: "/search",
+        element: <APISearch/>
+      },
+    ],
+  },
+  {
+    path: "/rules",
+    element: <App />,
+    children: [
+      {
+        path: "/rules",
+        element: <Rulebook/>
       },
     ],
   },
