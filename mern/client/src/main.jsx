@@ -14,6 +14,7 @@ import MonsterOverview from "./components/monsteroverview";
 import ItemOverview from "./components/itemoverview";
 import APISearch from "./components/search";
 import Rulebook from "./components/rulebook";
+import CharacterSheet from "./components/charactersheet";
 
 const router = createBrowserRouter([
   {
@@ -93,6 +94,16 @@ const router = createBrowserRouter([
       {
         path: "/rules",
         element: <Rulebook/>
+      },
+    ],
+  },
+  {
+    path: "/charactersheet",
+    element: <App />,
+    children: [
+      {
+        path: "/charactersheet",
+        element: <CharacterSheet/>
       },
     ],
   },
