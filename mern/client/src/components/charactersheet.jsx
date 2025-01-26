@@ -2,6 +2,11 @@
 *   Title: PlayerCharacterSheet
 *   Author: Grimm_mmirG
 *   Date: 2025-25-01
+*
+*
+*   For proper launching of the server: navigate to "campaignmanager\mern\server\" and execute node index.js
+*
+*
 =============================*/
 
 import React, { useState, useEffect } from "react";
