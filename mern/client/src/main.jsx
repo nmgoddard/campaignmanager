@@ -5,8 +5,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import App from "./App";
-import Record from "./components/record";
-import RecordList from "./components/recordlist";
+import NPCList from "./components/NPCList";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -16,27 +15,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <RecordList />,
+        element: <h2>Home Page</h2>,
       },
-    ],
-  },
-  {
-    path: "/edit/:id",
-    element: <App />,
-    children: [
       {
-        path: "/edit/:id",
-        element: <Record />,
-      },
-    ],
-  },
-  {
-    path: "/create",
-    element: <App />,
-    children: [
-      {
-        path: "/create",
-        element: <Record />,
+        path: "/npcs",
+        element: <NPCList npcs={[]} onSaveNPC={() => {}} onCreateNPC={() => {}} onDeleteNPC={() => {}} />,
       },
     ],
   },
