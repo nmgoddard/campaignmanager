@@ -3,69 +3,11 @@ import LocationList from "./locationlist";
 
 export default function CampaignOverview() {
 
-    const [campaignName, setCampaignName] = useState("My Cool Campaign!")
-    
-    const [planeList, setPlaneList] = useState([{   name: "Plane of Reality",
-        notesList: [{title: "Reality!", 
-                    content: "egg",
-                    id: 1}, 
-                    {title: "Truth!",
-                    content: "Wow!",
-                    id: 2
-                    }],
-        eventsList: [{title: "The Big Bad comes to town",
-                    content: "This is a really cool plot hook!",
-                    id: 11}],
-        npcList:[],
-        itemList: [],
-        subLocations: [],
-        type: "pl",
-        id: 1, }]);
+    const [campaignName, setCampaignName] = useState("")
+    const [planeList, setPlaneList] = useState([]);
     const [realmList, setRealmList] = useState([])
-    const [countryList, setCountryList] = useState([{ name: "Country of Cityvilla",
-        notesList: [{title: "Woah! Big Banks", 
-                    content: "im tired",
-                    id: 12,}, 
-                    {title: "The King's secret affair",
-                    content: "Wow!",
-                    id: 22,
-                    }],
-        eventsList: [{title: "The Big Bad comes to the other town",
-                    content: "This is also really cool plot hook!",
-                    id: 122,}],
-        npcList:[],
-        itemList: [],
-        subLocations: [{title: "Citysville2",
-                        content: "i swear i'll make the proper components",
-                        id: 13
-                        }],
-        type: "co",
-        id: 100}])
+    const [countryList, setCountryList] = useState([])
     const [regionList, setRegionList] = useState([])
-
-    
-
-    async function sortData() {
-        for (location in rawLocationData){
-            if (location.type=="pl"){
-                console.log("This is a plane.")
-                setPlaneList([...planeList, location]);
-            } else if (location.type == "rm"){
-                console.log("This is a realm.")
-                setRealmList([...realmList, location]);
-            } else if (location.type == "co"){
-                console.log("This is a country.")
-                setCountryList([...countryList, location]);
-            } else if (location.type == "rg"){
-                console.log("This is a region.")
-                setRegionList([...regionList, location]);
-            }
-        }
-    }
-
-    // useEffect(() => {
-    //     sortData(), []
-    // })
 
     const [showPlanes, setShowPlanes] = useState(false);
     const [showRealms, setShowRealms] = useState(false);
