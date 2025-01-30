@@ -2,14 +2,15 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import db from "./db/connection.js";
 
-import characters from "./routes/characters.js";
+import characters from "./routes/pcRoute.js";
 import npcs from "./routes/npcRoute.js";
-import campaigns from "./routes/campaigns.js";
+import campaigns from "./routes/campaignsRoute.js";
 import monsters from "./routes/monsters.js";
 import notes from "./routes/notes.js";
 import items from "./routes/items.js";
-import locations from "./routes/locations.js";
+import locations from "./routes/locationsRoute.js";
 
 const PORT = process.env.PORT || 5050;
 const app = express();
@@ -54,7 +55,7 @@ app.use("/items", items);
 //   });
 // });
 
-// start the Express server
+// Start the Express server
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });

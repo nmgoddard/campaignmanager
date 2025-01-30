@@ -9,7 +9,7 @@ const router = express.Router();
 //Joi validation schema
 const npcSchema = Joi.object({
   campaignID: Joi.number().integer().required(),  // Ensuring it's a number
-  locationID: Joi.alternatives().try(Joi.number().integer(), Joi.allow(null)),          // Allowing null for player-characters
+  locationID: Joi.number().integer().required(),          // Allowing null for player-characters
   characterID: Joi.number().integer().required(),
   charName: Joi.string().required(),
   age: Joi.number().integer().min(0).required(),  // Age should be a positive integer
