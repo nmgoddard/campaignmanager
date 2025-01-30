@@ -7,11 +7,9 @@ import {
 import App from "./App";
 import "./index.css";
 import CampaignOverview from "./components/campaignoverview";
-import LocationOverview from "./components/locationoverview";
 import CharacterOverview from "./components/characteroverview";
 import Notes from "./components/notes";
 import MonsterOverview from "./components/monsteroverview";
-import ItemOverview from "./components/itemoverview";
 import APISearch from "./components/search";
 import Rulebook from "./components/rulebook";
 
@@ -27,12 +25,12 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/locations",
+    path: "/home",
     element: <App />,
     children: [
       {
-        path: "/locations",
-        element: <LocationOverview />,
+        path: "/home",
+        element: <CampaignOverview />,
       },
     ],
   },
@@ -63,16 +61,6 @@ const router = createBrowserRouter([
       {
         path: "/monsters",
         element: <MonsterOverview/>
-      },
-    ],
-  },
-  {
-    path: "/items",
-    element: <App />,
-    children: [
-      {
-        path: "/items",
-        element: <ItemOverview/>
       },
     ],
   },

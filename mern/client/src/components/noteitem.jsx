@@ -26,11 +26,11 @@ export default function NoteItem({noteObj}) {
 
     return (
         <div style={{ color: "#193E19" }} className="justify-center items-center flex flex-col border-b-2 border-black relative">
-            <div className="flex flex-row min-w-96 mb-1 p-4 relative">
+            <button className="flex flex-row max-w-6 min-w-96 mb-1 p-4 relative" onClick={toggleContent}>
                 <h3 className="absolute left-2 top-1 bottom-0 text-xl ">{title}</h3>
-                <button onClick={toggleContent}
-                className="absolute right-5 top-1 bottom-0">{arrow}</button>
-            </div>
+                <p 
+                className="absolute right-2 top-1 bottom-0">{arrow}</p>
+            </button>
             {showContent && <p className="self-start mb-1">{content}</p>}
         </div>
     )

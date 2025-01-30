@@ -9,7 +9,7 @@ import Header from './components/header';
 function App() {
   return (
     <div className="w-full p-6">
-      <Header />
+      {/* <Header /> */}
       <Navbar />
       <Outlet />
     </div>

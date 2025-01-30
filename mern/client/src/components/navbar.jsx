@@ -5,9 +5,6 @@ export default function Navbar() {
   return (
     <div>
       <nav className="flex flex-col justify-between items-center mb-6 absolute left-5 w-10">
-        <NavLink to="/locations">
-          Locations
-        </NavLink>
         <NavLink to="/notes">
           Notes
         </NavLink>
@@ -16,9 +13,6 @@ export default function Navbar() {
         </NavLink>
         <NavLink to="/monsters">
           Monsters
-        </NavLink>
-        <NavLink to="/items">
-          Items
         </NavLink>
         <NavLink to="/search">
           Search
