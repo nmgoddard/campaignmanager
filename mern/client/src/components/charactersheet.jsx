@@ -52,29 +52,17 @@ const CharacterSheet = () => {
     classProficiencies: [],
   });
 
-  // New state for spellcasting
-  const [spells, setSpells] = useState([]);
-  const [knownSpells, setKnownSpells] = useState([]);
-  const [spellSlots, setSpellSlots] = useState({
-    level1: 0,
-    level2: 0,
-    level3: 0,
-    // Add more levels as necessary
-  });
-
   /* This is where our program will fetch race/class details to be used later */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [raceRes, classRes, spellRes] = await Promise.all([
+        const [raceRes, classRes] = await Promise.all([
           axios.get("https://www.dnd5eapi.co/api/races"),
-          axios.get("https://www.dnd5eapi.co/api/classes"),
-          axios.get("https://www.dnd5eapi.co/api/spells")
+          axios.get("https://www.dnd5eapi.co/api/classes")
         ]);
   
         setRaces(raceRes.data.results);
         setClasses(classRes.data.results);
-        setSpells(spellRes.data.results);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -165,10 +153,6 @@ const CharacterSheet = () => {
     if (selectedRace) {
       applyRaceBonuses(selectedRace.ability_bonuses); 
     }
-
-    // Filter spells based on the selected class
-    const classSpells = spells.filter(spell => spell.classes.some(cls => cls.index === classDetails.data.index));
-    setSpells(classSpells);
   };
 
   /* Apply race ability score bonuses to the character stats */
@@ -330,49 +314,6 @@ const CharacterSheet = () => {
               value={character.hitDice}
               readOnly
             />
-          </div>
-
-          {/* Spellcasting Section */}
-          <div>
-            <h2 className="text-lg font-bold mb-2">Spellcasting</h2>
-
-            {/* Display spell slots */}
-            <div className="spell-slots">
-              <label className="block font-medium">Spell Slots (Level 1):</label>
-              <input
-                type="number"
-                className="w-20 p-2 border rounded hover:bg-gray-100 focus:outline-none"
-                value={spellSlots.level1}
-                onChange={(e) => setSpellSlots({ ...spellSlots, level1: parseInt(e.target.value) || 0 })}
-              />
-              {/* Add inputs for other levels similarly */}
-            </div>
-
-            {/* Display available spells based on class */}
-            <div className="available-spells">
-              <h3 className="font-medium">Available Spells:</h3>
-              <select
-                className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
-                onChange={(e) => setKnownSpells([...knownSpells, e.target.value])}
-              >
-                <option value="">Select a Spell</option>
-                {spells.map((spell) => (
-                  <option key={spell.index} value={spell.name}>
-                    {spell.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Display selected known spells */}
-            <div className="known-spells">
-              <h3 className="font-medium">Known Spells:</h3>
-              <ul>
-                {knownSpells.map((spell, index) => (
-                  <li key={index}>{spell}</li>
-                ))}
-              </ul>
-            </div>
           </div>
         </form>
       </div>
