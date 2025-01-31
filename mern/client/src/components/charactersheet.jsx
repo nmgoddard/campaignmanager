@@ -42,14 +42,6 @@ const CharacterSheet = () => {
     speed: 0,
     hitDice: "",
     proficiencies: [],
-    savingThrows: {
-      strength: false,
-      dexterity: false,
-      constitution: false,
-      intelligence: false,
-      wisdom: false,
-      charisma: false,
-    },
     stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     size: "",
     size_description: "",
@@ -60,25 +52,43 @@ const CharacterSheet = () => {
     classProficiencies: [],
   });
 
+  // New state for spellcasting
+  const [spells, setSpells] = useState([]);
+  const [knownSpells, setKnownSpells] = useState([]);
+  const [spellSlots, setSpellSlots] = useState({
+    level1: 0,
+    level2: 0,
+    level3: 0,
+    // Add more levels as necessary
+  });
+
   /* This is where our program will fetch race/class details to be used later */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const raceData = await axios.get("https://www.dnd5eapi.co/api/races");
-        const classData = await axios.get("https://www.dnd5eapi.co/api/classes");
-        // This is where the useState updates with the races
-        setRaces(raceData.data.results); 
-        // This is where the useState updates with the classes
-        setClasses(classData.data.results); 
-      } 
-      // Error handling for API fetch
-      catch (error) {
-        console.error("Error fetching data:", error); 
+        const [raceRes, classRes, spellRes] = await Promise.all([
+          axios.get("https://www.dnd5eapi.co/api/races"),
+          axios.get("https://www.dnd5eapi.co/api/classes"),
+          axios.get("https://www.dnd5eapi.co/api/spells")
+        ]);
+  
+        setRaces(raceRes.data.results);
+        setClasses(classRes.data.results);
+        setSpells(spellRes.data.results);
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
     };
+  
     fetchData();
-  }, []); 
-
+  }, []);
+  
+  const passivePerception = 10 + Math.floor((character.stats.wisdom - 10) / 2);
+  
+  // Add these states to control visibility
+  const [showRaceDetails, setShowRaceDetails] = useState(false);
+  const [showClassProficiencies, setShowClassProficiencies] = useState(false);
+  
   /* This is where the character stats become updated whenever a race is selected or changed to another */
   const handleRaceChange = async (index) => {
     if (index === "") {
@@ -131,14 +141,6 @@ const CharacterSheet = () => {
         class: "",
         hitDice: "",
         proficiencies: [],
-        savingThrows: {
-          strength: false,
-          dexterity: false,
-          constitution: false,
-          intelligence: false,
-          wisdom: false,
-          charisma: false,
-        },
         startingProficiencies: [],
         classProficiencies: [],
       }));
@@ -163,6 +165,10 @@ const CharacterSheet = () => {
     if (selectedRace) {
       applyRaceBonuses(selectedRace.ability_bonuses); 
     }
+
+    // Filter spells based on the selected class
+    const classSpells = spells.filter(spell => spell.classes.some(cls => cls.index === classDetails.data.index));
+    setSpells(classSpells);
   };
 
   /* Apply race ability score bonuses to the character stats */
@@ -218,14 +224,20 @@ const CharacterSheet = () => {
     <div className="p-6 max-w-4xl mx-auto bg-gray-100 rounded-lg shadow-md flex gap-6">
       {/* Left Section - Display race details */}
       <div className="w-1/4 bg-gray-200 p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-bold mb-2">Race Details</h2>
+    <h2 className="text-lg font-bold mb-2 cursor-pointer" onClick={() => setShowRaceDetails(!showRaceDetails)}>
+      Race Details {showRaceDetails ? "▼" : "▲"}
+    </h2>
+    {showRaceDetails && (
+      <div>
         <p><strong>Size:</strong> {character.size}</p>
         <p><strong>Size Description:</strong> {character.size_description}</p>
         <p><strong>Languages:</strong> {character.languages.join(", ")}</p>
         <p><strong>Language Description:</strong> {character.language_desc}</p>
         <p><strong>Traits:</strong> {character.traits.join(", ")}</p>
       </div>
+    )}
 
+    </div>
       {/* Main Character Sheet Form */}
       <div className="flex-1 bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-4">D&D Character Sheet</h1>
@@ -235,7 +247,7 @@ const CharacterSheet = () => {
             <label className="block font-medium">Name:</label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
               value={character.name}
               onChange={(e) => setCharacter({ ...character, name: e.target.value })}
               placeholder="Enter character name"
@@ -245,7 +257,7 @@ const CharacterSheet = () => {
           {/* Race dropdown */}
           <div>
             <label className="block font-medium">Race:</label>
-            <select className="w-full p-2 border rounded" onChange={(e) => handleRaceChange(e.target.value || "")}>
+            <select className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none" onChange={(e) => handleRaceChange(e.target.value || "")}>
               <option value="">Select a Race</option>
               {races.map((race) => (
                 <option key={race.index} value={race.index}>{race.name}</option>
@@ -256,7 +268,7 @@ const CharacterSheet = () => {
           {/* Class dropdown */}
           <div>
             <label className="block font-medium">Class:</label>
-            <select className="w-full p-2 border rounded" onChange={(e) => handleClassChange(e.target.value || "")}>
+            <select className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none" onChange={(e) => handleClassChange(e.target.value || "")}>
               <option value="">Select a Class</option>
               {classes.map((cls) => (
                 <option key={cls.index} value={cls.index}>{cls.name}</option>
@@ -273,7 +285,7 @@ const CharacterSheet = () => {
                   <label className="block font-medium">{stat.charAt(0).toUpperCase() + stat.slice(1)}:</label>
                   <input
                     type="number"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
                     value={character.stats[stat]}
                     onChange={(e) => handleStatChange(stat, e.target.value)}
                     placeholder={`Enter ${stat}`}
@@ -283,45 +295,99 @@ const CharacterSheet = () => {
             </div>
           </div>
 
-          {/* Speed input */}
-          <div>
-            <label className="block font-medium">Speed:</label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
-              value={character.speed}
-              readOnly
-            />
+          {/* Speed and Passive Perception inputs in the same row */}
+          <div className="flex items-center space-x-4">
+            {/* Speed input */}
+            <div>
+              <label className="font-medium">Speed:</label>
+              <input
+                type="text"
+                className="w-20 p-2 border rounded hover:bg-gray-100 focus:outline-none"
+                value={character.speed}
+                readOnly
+              />
+            </div>
+
+            {/* Passive Perception Input */}
+            <div>
+              <label className="font-medium">Passive Perception:</label>
+              <input
+                type="text"
+                className="w-20 p-2 border rounded hover:bg-gray-100 focus:outline-none"
+                value={passivePerception}
+                readOnly
+              />
+            </div>
           </div>
+
 
           {/* Hit Dice */}
           <div>
             <label className="block font-medium">Hit Dice:</label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
               value={character.hitDice}
               readOnly
             />
+          </div>
+
+          {/* Spellcasting Section */}
+          <div>
+            <h2 className="text-lg font-bold mb-2">Spellcasting</h2>
+
+            {/* Display spell slots */}
+            <div className="spell-slots">
+              <label className="block font-medium">Spell Slots (Level 1):</label>
+              <input
+                type="number"
+                className="w-20 p-2 border rounded hover:bg-gray-100 focus:outline-none"
+                value={spellSlots.level1}
+                onChange={(e) => setSpellSlots({ ...spellSlots, level1: parseInt(e.target.value) || 0 })}
+              />
+              {/* Add inputs for other levels similarly */}
+            </div>
+
+            {/* Display available spells based on class */}
+            <div className="available-spells">
+              <h3 className="font-medium">Available Spells:</h3>
+              <select
+                className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
+                onChange={(e) => setKnownSpells([...knownSpells, e.target.value])}
+              >
+                <option value="">Select a Spell</option>
+                {spells.map((spell) => (
+                  <option key={spell.index} value={spell.name}>
+                    {spell.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Display selected known spells */}
+            <div className="known-spells">
+              <h3 className="font-medium">Known Spells:</h3>
+              <ul>
+                {knownSpells.map((spell, index) => (
+                  <li key={index}>{spell}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         </form>
       </div>
 
       {/* Right Section - Class proficiencies */}
       <div className="w-1/4 bg-gray-200 p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-bold mb-2">Class Proficiencies</h2>
-        <p><strong>Starting Proficiencies:</strong></p>
-        <ul className="list-disc pl-5">
-          {character.startingProficiencies.map((prof, index) => (
-            <li key={index}>{prof}</li>
-          ))}
-        </ul>
-        <p><strong>Class Proficiencies:</strong></p>
-        <ul className="list-disc pl-5">
-          {character.classProficiencies.map((prof, index) => (
-            <li key={index}>{prof}</li>
-          ))}
-        </ul>
+        <h2 className="text-lg font-bold mb-2 cursor-pointer" onClick={() => setShowClassProficiencies(!showClassProficiencies)}>
+          Class Proficiencies {showClassProficiencies ? "▼" : "▲"}
+        </h2>
+      {showClassProficiencies && (
+        <div>
+          <p><strong>Starting Proficiencies:</strong> {character.startingProficiencies.join(", ")}</p>
+          <p><strong>Class Proficiency Choices:</strong> {character.classProficiencies.join(", ")}</p>
+        </div>
+      )}
       </div>
     </div>
   );
