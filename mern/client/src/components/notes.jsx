@@ -7,9 +7,8 @@ export default function Notes() {
                     {title: "The evil little man", content: "This evil guy commits so many crimes. Like, I'm serious. SO many crimes.", id: 2},
                     {title: "Birds? No.", content:"birds are GOVERNMENT SPY DRONES. wake up sheeple.", id: 3}
     ]
-    console.log(typeof(noteList));
 
     return (
-        <NotesList listOfNotes={noteList}/>
+        <NotesList listOfNotes={noteList} type={"normal"}/>
     )
 }

@@ -2,7 +2,7 @@ import { useState } from "react"
 import NoteItem from "./noteitem";
 import PropTypes from "prop-types";
 
-export default function NotesList({ listOfNotes }) {
+export default function NotesList({ listOfNotes, type }) {
     if (!Array.isArray(listOfNotes)) {
         console.error("listOfNotes must be an array:", listOfNotes);
         return (
@@ -32,7 +32,7 @@ export default function NotesList({ listOfNotes }) {
             className="flex-1 flex-col justify-center align-center max-w-96 min-w-96 rounded-lg p-2 relative"
         >
             {listOfNotes.map((note) => (
-                <NoteItem noteObj={note} key={note.id} />
+                <NoteItem noteObj={note} key={note.id} type={type} />
             ))}
         </div>
     )

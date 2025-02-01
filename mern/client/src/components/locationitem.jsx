@@ -29,11 +29,11 @@ export default function LocationItem({locationObj, size}) {
                 <h3>
                     <button onClick={()=>{setShowNotes(!showNotes)}}>Notes</button>
                 </h3>   
-                {showNotes && <NotesList listOfNotes = {notesList}/>}
+                {showNotes && <NotesList listOfNotes = {notesList} type={"normal"}/>}
                 <h3>
                     <button onClick={()=>{setShowEvents(!showEvents)}}>Events</button>
                 </h3>
-                {showEvents && <NotesList listOfNotes = {eventsList}/>}
+                {showEvents && <NotesList listOfNotes = {eventsList} type={"event"}/>}
             </div>}
         </div>
     )

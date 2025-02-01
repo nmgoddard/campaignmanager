@@ -12,6 +12,7 @@ import Notes from "./components/notes";
 import MonsterOverview from "./components/monsteroverview";
 import APISearch from "./components/search";
 import Rulebook from "./components/rulebook";
+import EventPage from "./components/event";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,16 @@ const router = createBrowserRouter([
       {
         path: "/home",
         element: <CampaignOverview />,
+      },
+    ],
+  },
+  {
+    path: "/event",
+    element: <App />,
+    children: [
+      {
+        path: "/event",
+        element: <EventPage/>,
       },
     ],
   },
