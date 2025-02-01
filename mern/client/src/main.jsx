@@ -5,8 +5,13 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import App from "./App";
-import NPCList from "./components/NPCList";
 import "./index.css";
+import CampaignOverview from "./components/campaignoverview";
+import CharacterOverview from "./components/characteroverview";
+import Notes from "./components/notes";
+import MonsterOverview from "./components/monsteroverview";
+import APISearch from "./components/search";
+import Rulebook from "./components/rulebook";
 
 const router = createBrowserRouter([
   {
@@ -15,11 +20,67 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <h2>Home Page</h2>,
+        element: <CampaignOverview />,
       },
+    ],
+  },
+  {
+    path: "/home",
+    element: <App />,
+    children: [
       {
-        path: "/npcs",
-        element: <NPCList npcs={[]} onSaveNPC={() => {}} onCreateNPC={() => {}} onDeleteNPC={() => {}} />,
+        path: "/home",
+        element: <CampaignOverview />,
+      },
+    ],
+  },
+  {
+    path: "/notes",
+    element: <App />,
+    children: [
+      {
+        path: "/notes",
+        element: <Notes />,
+      },
+    ],
+  },
+  {
+    path: "/characters",
+    element: <App />,
+    children: [
+      {
+        path: "/characters",
+        element: <CharacterOverview />,
+      },
+    ],
+  },
+  {
+    path: "/monsters",
+    element: <App />,
+    children: [
+      {
+        path: "/monsters",
+        element: <MonsterOverview/>
+      },
+    ],
+  },
+  {
+    path: "/search",
+    element: <App />,
+    children: [
+      {
+        path: "/search",
+        element: <APISearch/>
+      },
+    ],
+  },
+  {
+    path: "/rules",
+    element: <App />,
+    children: [
+      {
+        path: "/rules",
+        element: <Rulebook/>
       },
     ],
   },
