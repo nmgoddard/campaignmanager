@@ -11,17 +11,9 @@ function App() {
     <div className="w-full p-6">
       {/* <Header /> */}
       <Navbar />
-      <h1>Welcome to the Campaign Manager</h1>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/npcs">View NPCs</Link>
-          </li>
-        </ul>
-      </nav>
       <Outlet />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

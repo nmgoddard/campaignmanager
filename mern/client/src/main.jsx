@@ -6,7 +6,9 @@ import {
 } from "react-router-dom";
 import App from "./App";
 import "./index.css";
+import CampaignList from "./components/campaignlist";
 import CampaignOverview from "./components/campaignoverview";
+import LocationItem from "./components/locationitem";
 import CharacterOverview from "./components/characteroverview";
 import Notes from "./components/notes";
 import MonsterOverview from "./components/monsteroverview";
@@ -19,68 +21,36 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/",
-        element: <CampaignOverview />,
+        path: "/campaigns",
+        element: <CampaignList />,
       },
-    ],
-  },
-  {
-    path: "/home",
-    element: <App />,
-    children: [
       {
-        path: "/home",
+        path: "/campaigns/:id",
         element: <CampaignOverview />,
       },
-    ],
-  },
-  {
-    path: "/notes",
-    element: <App />,
-    children: [
+      {
+        path: "/locations/:id",
+        element: <LocationItem />
+      },
       {
         path: "/notes",
         element: <Notes />,
       },
-    ],
-  },
-  {
-    path: "/characters",
-    element: <App />,
-    children: [
       {
         path: "/characters",
         element: <CharacterOverview />,
       },
-    ],
-  },
-  {
-    path: "/monsters",
-    element: <App />,
-    children: [
       {
         path: "/monsters",
-        element: <MonsterOverview/>
+        element: <MonsterOverview />,
       },
-    ],
-  },
-  {
-    path: "/search",
-    element: <App />,
-    children: [
       {
         path: "/search",
-        element: <APISearch/>
+        element: <APISearch />,
       },
-    ],
-  },
-  {
-    path: "/rules",
-    element: <App />,
-    children: [
       {
         path: "/rules",
-        element: <Rulebook/>
+        element: <Rulebook />,
       },
     ],
   },
