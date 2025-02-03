@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import App from "./App";
+import NPCList from "./components/NPCList";
 import "./index.css";
 import CampaignList from "./components/campaignlist";
 import CampaignOverview from "./components/campaignoverview";
