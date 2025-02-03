@@ -10,7 +10,6 @@ import "./index.css";
 import CampaignList from "./components/campaignlist";
 import CampaignOverview from "./components/campaignoverview";
 import LocationItem from "./components/locationitem";
-import CharacterOverview from "./components/characteroverview";
 import Notes from "./components/notes";
 import MonsterOverview from "./components/monsteroverview";
 import APISearch from "./components/search";
