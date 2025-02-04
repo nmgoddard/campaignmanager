@@ -26,8 +26,11 @@ export default function Navbar() {
         <NavLink to="/rules">
           Rules
         </NavLink>
-        <NavLink to="/charactersheet">
-          charactersheet
+        <NavLink to="/characterdisplay">
+          CharacterDisplay
+        </NavLink>
+        <NavLink to="/spelltable">
+          spelltable
         </NavLink>
       </nav>
     </div>

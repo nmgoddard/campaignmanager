@@ -1,5 +1,5 @@
 /*=========================== 
-*   Title: PlayerCharacterSheet
+*   Title: PlayerCharacterStats
 *   Author: Grimm_mmirG
 *   Date: 2025-25-01
 *
@@ -14,16 +14,13 @@ import axios from "axios";
 
 /* This section uses useState to store data for races, classes, selected classes and races and character stats */
 
-const CharacterSheet = () => {
-  
-  const [races, setRaces] = useState([]); 
+const CharacterStats = ({ onClassSelect }) => {
+  const [races, setRaces] = useState([]);
   const [classes, setClasses] = useState([]);
-  // Currently selected race
-  const [selectedRace, setSelectedRace] = useState(null); 
-  // Currently selected class
-  const [selectedClass, setSelectedClass] = useState(null); 
+  const [selectedRace, setSelectedRace] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
 
-  /* The base stats that will be loaded: Note that these will be updated as per the race bonuses */
+/* The base stats that will be loaded: Note that these will be updated as per the race bonuses */
   const [baseStats, setBaseStats] = useState({
     strength: 10,
     dexterity: 10,
@@ -33,7 +30,7 @@ const CharacterSheet = () => {
     charisma: 10,
   });
 
-  /* Here is where the character details will be updated/stored as per the Class/Race selection */
+/* Here is where the character details will be updated/stored as per the Class/Race selection */
   const [character, setCharacter] = useState({
     name: "",
     alignment: "",
@@ -50,37 +47,35 @@ const CharacterSheet = () => {
     traits: [],
     startingProficiencies: [],
     classProficiencies: [],
+    level: 1,
+    classFeatures: [],
   });
 
-  /* This is where our program will fetch race/class details to be used later */
+ /* States for collapsible menus */
+  const [showRaceDetails, setShowRaceDetails] = useState(false);
+  const [showClassProficiencies, setShowClassProficiencies] = useState(false);
+  const [showClassFeatures, setShowClassFeatures] = useState(false);
+
+/* This is where our program will fetch race/class details to be used later */
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [raceRes, classRes] = await Promise.all([
           axios.get("https://www.dnd5eapi.co/api/races"),
-          axios.get("https://www.dnd5eapi.co/api/classes")
+          axios.get("https://www.dnd5eapi.co/api/classes"),
         ]);
-  
         setRaces(raceRes.data.results);
         setClasses(classRes.data.results);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-  
     fetchData();
   }, []);
-  
-  const passivePerception = 10 + Math.floor((character.stats.wisdom - 10) / 2);
-  
-  // Add these states to control visibility
-  const [showRaceDetails, setShowRaceDetails] = useState(false);
-  const [showClassProficiencies, setShowClassProficiencies] = useState(false);
-  
-  /* This is where the character stats become updated whenever a race is selected or changed to another */
+
+/* This is where the character stats become updated whenever a race is selected or changed to another */
   const handleRaceChange = async (index) => {
     if (index === "") {
-    // This is error handeling if the user reselected the default option
       setSelectedRace(null);
       setCharacter((prev) => ({
         ...prev,
@@ -97,10 +92,7 @@ const CharacterSheet = () => {
     }
 
     const raceDetails = await axios.get(`https://www.dnd5eapi.co/api/races/${index}`);
-    // Set selected race details
-    setSelectedRace(raceDetails.data); 
-
-    // Update character state with selected race attributes
+    setSelectedRace(raceDetails.data);
     setCharacter((prev) => ({
       ...prev,
       race: raceDetails.data.name,
@@ -112,18 +104,13 @@ const CharacterSheet = () => {
       traits: raceDetails.data.traits.map((trait) => trait.name),
       stats: { ...baseStats },
     }));
-
-    // Apply race bonuses to stats
-    applyRaceBonuses(raceDetails.data.ability_bonuses); 
-    // Update saving throws based on race proficiencies
-    updateSavingThrows(raceDetails.data.proficiencies); 
+    applyRaceBonuses(raceDetails.data.ability_bonuses);
   };
 
-  /* This is where the character stats become updated whenever a class is selected or changed to another */
+/* This is where the character stats become updated whenever a class is selected or changed to another */
   const handleClassChange = async (index) => {
     if (!index) {
-    // This is error handeling if the user reselected the default option
-      setSelectedClass(null); 
+      setSelectedClass(null);
       setCharacter((prev) => ({
         ...prev,
         class: "",
@@ -131,15 +118,14 @@ const CharacterSheet = () => {
         proficiencies: [],
         startingProficiencies: [],
         classProficiencies: [],
+        classFeatures: [],
       }));
+      onClassSelect(""); 
       return;
     }
 
     const classDetails = await axios.get(`https://www.dnd5eapi.co/api/classes/${index}`);
-    // Set selected class details
-    setSelectedClass(classDetails.data); 
-
-    /* Update character state with selected class attributes */ 
+    setSelectedClass(classDetails.data);
     setCharacter((prev) => ({
       ...prev,
       class: classDetails.data.name,
@@ -148,14 +134,46 @@ const CharacterSheet = () => {
       startingProficiencies: classDetails.data.proficiencies.map((p) => p.name),
       classProficiencies: classDetails.data.proficiency_choices.map((p) => p.desc),
     }));
+    onClassSelect(index); 
 
-    // Reapply race bonuses if a race is selected
-    if (selectedRace) {
-      applyRaceBonuses(selectedRace.ability_bonuses); 
+/* Fetch class features for all levels up to the current level */
+    fetchClassFeatures(index, character.level);
+  };
+
+  const handleLevelChange = async (newLevel) => {
+    setCharacter((prev) => ({
+      ...prev,
+      level: newLevel,
+    }));
+
+/* Fetch class features for all levels up to the new level */
+    if (selectedClass) {
+      fetchClassFeatures(selectedClass.index, newLevel);
     }
   };
 
-  /* Apply race ability score bonuses to the character stats */
+/* Fetch class features as per selected class */  
+  const fetchClassFeatures = async (classIndex, level) => {
+    try {
+      const features = [];
+      for (let i = 1; i <= level; i++) {
+        const response = await axios.get(`https://www.dnd5eapi.co/api/classes/${classIndex}/levels/${i}`);
+        console.log(`Level ${i} Features:`, response.data.features); 
+        features.push(...response.data.features.map((feature) => `Level ${i}: ${feature.name}`));
+      }
+      console.log("Class Features:", features); 
+
+/* Update character state with selected class attributes */ 
+      setCharacter((prev) => ({
+        ...prev,
+        classFeatures: features,
+      }));
+    } catch (error) {
+      console.error("Error fetching class features:", error);
+    }
+  };
+
+/* Apply race ability score bonuses to the character stats */  
   const applyRaceBonuses = (abilityBonuses) => {
     const statMap = {
       str: "strength",
@@ -165,63 +183,56 @@ const CharacterSheet = () => {
       wis: "wisdom",
       cha: "charisma",
     };
-
-    // Use base stats as a starting point
-    const updatedStats = { ...baseStats }; 
-
-    /* Loop through race bonuses and apply to stats */
+    const updatedStats = { ...baseStats };
     abilityBonuses.forEach((bonus) => {
-        // Map ability score index to stat key
-      const statKey = statMap[bonus.ability_score.index]; 
+      const statKey = statMap[bonus.ability_score.index];
       if (statKey && updatedStats[statKey] !== undefined) {
-        // Apply bonus to stat
-        updatedStats[statKey] += bonus.bonus; 
+        updatedStats[statKey] += bonus.bonus;
       }
     });
 
-    /* Update character state with modified stats */
     setCharacter((prev) => ({
       ...prev,
       stats: updatedStats,
     }));
   };
 
-  /* Handle manual stat changes by the user */
+/* Handle manual stat changes by the user */  
   const handleStatChange = (stat, value) => {
     setCharacter((prev) => ({
       ...prev,
       stats: {
         ...prev.stats,
-        // Ensure value is a valid number
-        [stat]: parseInt(value) || 0, 
+        [stat]: parseInt(value) || 0,
       },
     }));
     setBaseStats((prev) => ({
       ...prev,
-      // Update base stats as well
-      [stat]: parseInt(value) || 0, 
+      [stat]: parseInt(value) || 0,
     }));
   };
 
-  // JSX rendering of the character sheet form
   return (
     <div className="p-6 max-w-4xl mx-auto bg-gray-100 rounded-lg shadow-md flex gap-6">
       {/* Left Section - Display race details */}
       <div className="w-1/4 bg-gray-200 p-4 rounded-lg shadow-md">
-    <h2 className="text-lg font-bold mb-2 cursor-pointer" onClick={() => setShowRaceDetails(!showRaceDetails)}>
-      Race Details {showRaceDetails ? "▼" : "▲"}
-    </h2>
-    {showRaceDetails && (
-      <div>
-        <p><strong>Size:</strong> {character.size}</p>
-        <p><strong>Size Description:</strong> {character.size_description}</p>
-        <p><strong>Languages:</strong> {character.languages.join(", ")}</p>
-        <p><strong>Language Description:</strong> {character.language_desc}</p>
-        <p><strong>Traits:</strong> {character.traits.join(", ")}</p>
+        <h2
+          className="text-lg font-bold mb-2 cursor-pointer"
+          onClick={() => setShowRaceDetails(!showRaceDetails)}
+        >
+          Race Details {showRaceDetails ? "▼" : "▲"}
+        </h2>
+        {showRaceDetails && (
+          <div>
+            <p><strong>Size:</strong> {character.size}</p>
+            <p><strong>Size Description:</strong> {character.size_description}</p>
+            <p><strong>Languages:</strong> {character.languages.join(", ")}</p>
+            <p><strong>Language Description:</strong> {character.language_desc}</p>
+            <p><strong>Traits:</strong> {character.traits.join(", ")}</p>
+          </div>
+        )}
       </div>
-    )}
 
-    </div>
       {/* Main Character Sheet Form */}
       <div className="flex-1 bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-4">D&D Character Sheet</h1>
@@ -241,10 +252,15 @@ const CharacterSheet = () => {
           {/* Race dropdown */}
           <div>
             <label className="block font-medium">Race:</label>
-            <select className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none" onChange={(e) => handleRaceChange(e.target.value || "")}>
+            <select
+              className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
+              onChange={(e) => handleRaceChange(e.target.value || "")}
+            >
               <option value="">Select a Race</option>
               {races.map((race) => (
-                <option key={race.index} value={race.index}>{race.name}</option>
+                <option key={race.index} value={race.index}>
+                  {race.name}
+                </option>
               ))}
             </select>
           </div>
@@ -252,12 +268,30 @@ const CharacterSheet = () => {
           {/* Class dropdown */}
           <div>
             <label className="block font-medium">Class:</label>
-            <select className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none" onChange={(e) => handleClassChange(e.target.value || "")}>
+            <select
+              className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
+              onChange={(e) => handleClassChange(e.target.value || "")}
+            >
               <option value="">Select a Class</option>
               {classes.map((cls) => (
-                <option key={cls.index} value={cls.index}>{cls.name}</option>
+                <option key={cls.index} value={cls.index}>
+                  {cls.name}
+                </option>
               ))}
             </select>
+          </div>
+
+          {/* Level input */}
+          <div>
+            <label className="block font-medium">Level:</label>
+            <input
+              type="number"
+              className="w-full p-2 border rounded hover:bg-gray-100 focus:outline-none"
+              value={character.level}
+              onChange={(e) => handleLevelChange(parseInt(e.target.value) || 1)}
+              min="1"
+              max="20"
+            />
           </div>
 
           {/* Stats inputs */}
@@ -298,12 +332,11 @@ const CharacterSheet = () => {
               <input
                 type="text"
                 className="w-20 p-2 border rounded hover:bg-gray-100 focus:outline-none"
-                value={passivePerception}
+                value={10 + Math.floor((character.stats.wisdom - 10) / 2)}
                 readOnly
               />
             </div>
           </div>
-
 
           {/* Hit Dice */}
           <div>
@@ -318,20 +351,43 @@ const CharacterSheet = () => {
         </form>
       </div>
 
-      {/* Right Section - Class proficiencies */}
-      <div className="w-1/4 bg-gray-200 p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-bold mb-2 cursor-pointer" onClick={() => setShowClassProficiencies(!showClassProficiencies)}>
-          Class Proficiencies {showClassProficiencies ? "▼" : "▲"}
-        </h2>
-      {showClassProficiencies && (
+      {/* Right Section - Class proficiencies and features */}
+      <div className="w-1/4 bg-gray-200 p-4 rounded-lg shadow-md space-y-4">
+        {/* Class Proficiencies */}
         <div>
-          <p><strong>Starting Proficiencies:</strong> {character.startingProficiencies.join(", ")}</p>
-          <p><strong>Class Proficiency Choices:</strong> {character.classProficiencies.join(", ")}</p>
+          <h2
+            className="text-lg font-bold mb-2 cursor-pointer"
+            onClick={() => setShowClassProficiencies(!showClassProficiencies)}
+          >
+            Class Proficiencies {showClassProficiencies ? "▼" : "▲"}
+          </h2>
+          {showClassProficiencies && (
+            <div>
+              <p><strong>Starting Proficiencies:</strong> {character.startingProficiencies.join(", ")}</p>
+              <p><strong>Class Proficiency Choices:</strong> {character.classProficiencies.join(", ")}</p>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Class Features */}
+        <div>
+          <h2
+            className="text-lg font-bold mb-2 cursor-pointer"
+            onClick={() => setShowClassFeatures(!showClassFeatures)}
+          >
+            Class Features {showClassFeatures ? "▼" : "▲"}
+          </h2>
+          {showClassFeatures && (
+            <ul className="list-disc pl-5">
+              {character.classFeatures.map((feature, index) => (
+                <li key={index}>{feature}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default CharacterSheet;
+export default CharacterStats;

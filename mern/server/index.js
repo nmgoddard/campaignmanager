@@ -52,6 +52,28 @@ app.get("/api/classes/:index", async (req, res) => {
   }
 });
 
+// Route to fetch all spells
+app.get("/api/spells", async (req, res) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/spells`);
+    res.json(response.data.results); // Return spell list
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching spells" });
+  }
+});
+
+// Route to fetch a specific spell by index
+app.get("/api/spells/:index", async (req, res) => {
+  try {
+    const { index } = req.params;
+    const response = await axios.get(`${API_BASE_URL}/spells/${index}`);
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: `Error fetching spell: ${index}` });
+  }
+});
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
