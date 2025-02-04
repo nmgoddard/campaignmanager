@@ -1,3 +1,9 @@
+/*=========================== 
+*   Title: SpellTable
+*   Author: Grimm_mmirG
+*   Date: 2025-02-03
+=============================*/
+
 import React, { useState, useEffect } from "react";
 
 const SpellTable = ({ selectedClass }) => {
@@ -9,7 +15,7 @@ const SpellTable = ({ selectedClass }) => {
 
   useEffect(() => {
     if (!selectedClass) {
-      setSpellsByLevel({}); // Clear spells if no class is selected
+      setSpellsByLevel({}); 
       return;
     }
 
@@ -18,12 +24,12 @@ const SpellTable = ({ selectedClass }) => {
       setError(null);
 
       try {
-        // Fetch spells for the selected class
+        /* Fetch spells for the selected class */
         const response = await fetch(`https://www.dnd5eapi.co/api/classes/${selectedClass}/spells`);
         if (!response.ok) throw new Error("Failed to fetch spells");
         const data = await response.json();
 
-        // Fetch details for each spell
+        /* Fetch details for each spell */
         const spellDetails = await Promise.all(
           data.results.map(async (spell) => {
             const spellResponse = await fetch(`https://www.dnd5eapi.co${spell.url}`);
@@ -32,7 +38,7 @@ const SpellTable = ({ selectedClass }) => {
           })
         );
 
-        // Group spells by level
+        /* Group spells by level */
         const groupedSpells = spellDetails.reduce((acc, spell) => {
           acc[spell.level] = acc[spell.level] || [];
           acc[spell.level].push(spell);
