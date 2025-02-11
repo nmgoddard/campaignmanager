@@ -1,13 +1,50 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import LocationList from "./locationlist";
+import LocationForm from "./locationform";
 import PropTypes from "prop-types";
-import NotesList from "./noteslist";
+// import NotesList from "./noteslist";
 
 export default function LocationItem() {
-    const { id } = useParams(); // Get ID from the URL
+    const { id } = useParams(); // Get IDs from the URL
+    const navigate = useNavigate();
+    const isNew = id === "new";
+    const locationData = useLocation();
+    const locationState = useLocation();
+    // console.log("window.location:", window.location.href); // Debug full URL
+    // console.log("locationData.search:", locationData.search);
+    const params = new URLSearchParams(locationData.search);
+    const campaignID = params.get("campaignID");
+    const parentLocationID = params.get("parentLocationID") || null;
+    const locationType = params.get("locationType");
+
     const [location, setLocation] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!isNew);
+    // const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState(null);
+    const [editMode, setEditMode] = useState(isNew);
+    const [formData, setFormData] = useState({ 
+        name: "",
+        description: "",
+        locationType: locationType,
+        campaignID: campaignID,
+        parentLocationID: parentLocationID,
+    });
+
+    const getChildLocationType = (locationType) => {
+
+        const locationHierarchy = {
+            Plane: "Realm",
+            Realm: "Country",
+            Country: "Region",
+            Region: "Site",
+            Site: "Site",  // Nested sites allowed
+        };
+
+        return locationHierarchy[locationType] || null;
+    };
+
     // Expand/collapse states
     const [showNotes, setShowNotes] = useState(false);
     const [showEvents, setShowEvents] = useState(false);
@@ -16,6 +53,19 @@ export default function LocationItem() {
     const [showSublocations, setShowSublocations] = useState(false);
 
     useEffect(() => {
+        if (isNew) {
+            setFormData({
+                name: "",
+                description: "",
+                locationType: locationType,  //Problem: this needs to be the next type down in hierarchy
+                campaignID: campaignID,  // Use extracted campaignID
+                parentLocationID: parentLocationID,  //Problem: this needs to be the previous locationID
+            });
+            setLocation(null);
+            setLoading(false);
+            return;
+        }
+
         const fetchLocation = async () => {
             try {
                 const response = await fetch(`http://localhost:5050/locations/${id}`);
@@ -23,7 +73,23 @@ export default function LocationItem() {
                     throw new Error(`Error fetching location: ${response.statusText}`);
                 }
                 const data = await response.json();
+                console.log("Fetched location data: ", data);
                 setLocation(data);
+                setFormData({
+                    name: data.name,
+                    description: data.description || "",
+                    locationType: data.locationType,
+                    campaignID: data.campaignID ? data.campaignID.toString() : "",
+                    parentLocationID: data.parentLocationID ? data.parentLocationID.toString() : null,
+                });
+                console.log("Setting formData with:", {
+                    name: data.name,
+                    description: data.description || "",
+                    locationType: data.locationType || "Region",
+                    campaignID: data.campaignID ? data.campaignID.toString() : "",
+                    parentLocationID: data.parentLocationID ? data.parentLocationID.toString() : null,
+                });
+                
             } catch (err) {
                 console.error("Failed to fetch location:", err);
                 setError(err.message);
@@ -33,94 +99,123 @@ export default function LocationItem() {
         };
 
         fetchLocation();
-    }, [id]);
+    }, [id, isNew, campaignID, parentLocationID, locationType, locationState.state?.forceRefresh]);
+    
+    const handleSave = async (newLocation) => {
+        setEditMode(false);
+        setLocation(newLocation);
+        navigate(`/locations/${newLocation._id}`);
+    };    
 
-    if (loading) return <p className="text-gray-600">Loading location details...</p>;
+    const handleDelete = async () => {
+        if (deleting) return; //no duplicate requests
+        setDeleting(true);
+        if (!window.confirm("Are you sure you want to delete this location?")) return;
+        
+        setDeleting(true);
+
+        try {
+            const response = await fetch(`http://localhost:5050/locations/${id}`, { method: "DELETE" });
+            if (!response.ok) {
+                const errorResponse = await response.json();
+                throw new Error(errorResponse.error || "Failed to delete location");
+            }
+            
+            const redirectPath = parentLocationID ? `/location/${parentLocationID}` : "/campaigns";
+            navigate(redirectPath);
+        } catch (error) {
+            console.error(error);
+            setError(error.message);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleCancel = () => {
+        if (isNew) {
+            navigate(parentLocationID ? `/locations/${parentLocationID}` : "/campaigns");
+        }
+         else {
+            setFormData({
+                name: location?.name || "",
+                description: location?.description || "",
+                locationType: location?.locationType || "Region",
+                campaignID: location?.campaignID || "",
+                parentLocationID: location?.parentLocationID || null,
+            });
+            setEditMode(false);
+            
+        }
+    };
+    
+    if (loading || !location) return <p className="text-gray-600">Loading location details...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
-    if (!location) return <p className="text-red-500">Location not found.</p>;
+    if (!location) {
+        console.warn("Location data is missing, preventing incorrect render")
+        return <p className="text-gray-600">Fetching location...</p>;
+    }
 
-    const {
-        name,
-        description,
-        notesList = [],
-        eventsList = [],
-        npcList = [],
-        itemList = [],
-        subLocations = [],
-        locationType
-    } = location;
-
+    console.log("Rendering location item: ", location);
     return (
         <div className="p-4 border rounded-lg bg-white shadow-md">
-            {/* Location Title */}
-            <h2 className="text-2xl font-bold">
-                <Link to={`/locations/${id}`} className="hover:underline">
-                    {name} ({locationType})
-                </Link>
-            </h2>
-
-            {/* Description */}
-            <p className="text-gray-600 italic">{description || "No description available."}</p>
-
-            {/* Notes Section */}
-            <button onClick={() => setShowNotes(!showNotes)} className="mt-2 text-blue-600 underline">
-                Notes {showNotes ? "▼" : "▶"}
-            </button>
-            {showNotes && <NotesList listOfNotes={notesList} />}
-
-            {/* Events Section */}
-            <button onClick={() => setShowEvents(!showEvents)} className="mt-2 text-blue-600 underline">
-                Events {showEvents ? "▼" : "▶"}
-            </button>
-            {showEvents && (
-                <ul className="ml-4 list-disc">
-                    {eventsList.map((event, index) => (
-                        <li key={index}>{event.name}</li>
-                    ))}
-                </ul>
-            )}
-
-            {/* NPCs & Items (Only for Regions and Sites) */}
-            {["Region", "Site"].includes(locationType) && (
+            {editMode ? (
+                    <LocationForm 
+                    campaignID={formData.campaignID}
+                    parentLocationID={isNew ? location?._id : formData.parentLocationID}
+                    locationType={isNew ? getChildLocationType(formData.locationType) : formData.locationType}
+                    existingLocation={location}
+                    onSave={handleSave}
+                    onCancel={handleCancel}
+                />
+            ) : (
                 <>
-                    <button onClick={() => setShowNPCs(!showNPCs)} className="mt-2 text-blue-600 underline">
-                        NPCs {showNPCs ? "▼" : "▶"}
+                    <h1 className="text-3xl font-bold">{location.name || "Unknown Location"}</h1>
+                    <p className="text-lg italic">{location.description || "No description available."}</p>
+                    {/* <p><strong>Campaign ID:</strong> {formData.campaignID}</p>
+                    <p><strong>Parent Location ID:</strong> {formData.parentLocationID}</p>
+                    <p><strong>Location Type:</strong> {formData.locationType}</p> */}
+                    <div className="flex space-x-2 mt-4">
+                        <button onClick={() => setEditMode(true)} className="bg-blue-600 text-white px-4 py-2 rounded">
+                            Edit
+                        </button>
+                        <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-2 rounded">
+                            Delete Location
+                        </button>
+                    </div>
+
+                    {/* Notes Section */}
+                    <button onClick={() => setShowNotes(!showNotes)} className="mt-2 text-blue-600 underline">
+                        Notes {showNotes ? "▲" : "▼"}
                     </button>
-                    {showNPCs && (
-                        <ul className="ml-4 list-disc">
-                            {npcList.map((npc, index) => (
-                                <li key={index}>{npc.name}</li>
-                            ))}
-                        </ul>
+                    {/* {showNotes && <NotesList listOfNotes={notesList} />} */}
+
+                    {/* Events Section */}
+                    <button onClick={() => setShowEvents(!showEvents)} className="mt-2 text-blue-600 underline">
+                        Events {showEvents ? "▲" : "▼"}
+                    </button>
+
+                    {/* NPCs & Items (Only for Regions and Sites) */}
+                    {["Region", "Site"].includes(formData.locationType) && (
+                        <>
+                            <button onClick={() => setShowNPCs(!showNPCs)} className="mt-2 text-blue-600 underline">
+                                NPCs {showNPCs ? "▲" : "▼"}
+                            </button>
+
+                            <button onClick={() => setShowItems(!showItems)} className="mt-2 text-blue-600 underline">
+                                Items {showItems ? "▲" : "▼"}
+                            </button>
+                        </>
                     )}
 
-                    <button onClick={() => setShowItems(!showItems)} className="mt-2 text-blue-600 underline">
-                        Items {showItems ? "▼" : "▶"}
-                    </button>
-                    {showItems && (
-                        <ul className="ml-4 list-disc">
-                            {itemList.map((item, index) => (
-                                <li key={index}>{item.name}</li>
-                            ))}
-                        </ul>
-                    )}
-                </>
-            )}
-
-            {/* Sublocations (Only for Regions and Sites) */}
-            {["Region", "Site"].includes(locationType) && subLocations.length > 0 && (
-                <>
+                    {/* Sublocations */}
                     <button onClick={() => setShowSublocations(!showSublocations)} className="mt-2 text-blue-600 underline">
-                        Sublocations {showSublocations ? "▼" : "▶"}
+                        {getChildLocationType(formData.locationType)}s {showSublocations ? "▲" : "▼"}
                     </button>
-                    {showSublocations &&
-                        subLocations.map((sub) => (
-                            <div key={sub._id} className="ml-4">
-                                <Link to={`/locations/${sub._id}`} className="text-lg font-semibold hover:underline">
-                                    {sub.name} ({sub.locationType})
-                                </Link>
-                            </div>
-                        ))}
+                    {showSublocations && <LocationList
+                        parentLocationID={location?._id}
+                        locationType={getChildLocationType(formData.locationType)}
+                        campaignID={formData.campaignID} />}
+
                 </>
             )}
         </div>

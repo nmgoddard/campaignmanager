@@ -57,12 +57,18 @@ export const getLocationById = async (id) => {
     const location = await db.collection(collectionName).findOne({ _id: new ObjectId(id) });
 
     return location
+      // ? {
+      //     ...location,
+      //     _id: location._id.toString(),
+      //     campaignID: location.campaignID.toString(),
+      //     parentLocationID: location.parentLocationID ? location.parentLocationID.toString() : null,
+      //   }
       ? {
-          ...location,
-          _id: location._id.toString(),
-          campaignID: location.campaignID.toString(),
-          parentLocationID: location.parentLocationID ? location.parentLocationID.toString() : null,
-        }
+        ...location,
+        _id: location._id.toString(),
+        campaignID: location.campaignID instanceof ObjectId ? location.campaignID.toString() : location.campaignID,
+        parentLocationID: location.parentLocationID instanceof ObjectId ? location.parentLocationID.toString() : location.parentLocationID || null,
+      }
       : null;
   } catch (error) {
     console.error(`Error fetching location by ID: ${id}`, error);

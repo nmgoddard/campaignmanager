@@ -28,22 +28,7 @@ export default function CampaignList() {
     }, []);
 
     const handleCreateCampaign = async () => {
-        try {
-            const newCampaign = { title: "New Campaign", description: "", createdBy: "DungeonMaster123" };
-            const response = await fetch("http://localhost:5050/campaigns", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newCampaign),
-            });
-
-            if (!response.ok) throw new Error("Failed to create campaign");
-
-            const createdCampaign = await response.json();
-            navigate(`/campaigns/${createdCampaign._id || createdCampaign.insertedId}`);
-        } catch (error) {
-            console.error(error);
-            setError("Failed to create campaign.");
-        }
+        navigate("/campaigns/new");
     };
 
     if (loading) return <p className="text-lg text-gray-600">Loading campaigns...</p>;
@@ -53,6 +38,8 @@ export default function CampaignList() {
                 <p>Error: {error}</p>
             </div>
         );
+
+    console.log("CampaignList - campaignlist did stuff")
 
     return (
         <div className="flex-1 flex-col justify-center max-w-6xl min-w-96 rounded-lg p-2" style={{ background: "#e9bf69" }}>
