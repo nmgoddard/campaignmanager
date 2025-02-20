@@ -15,6 +15,8 @@ export default function LocationItem() {
     // console.log("locationData.search:", locationData.search);
     const params = new URLSearchParams(locationData.search);
     const campaignID = params.get("campaignID");
+    const [campaignName, setCampaignName] = useState("");
+    const [parentLocationName, setParentLocationName] = useState("");
     const parentLocationID = params.get("parentLocationID") || null;
     const locationType = params.get("locationType");
 
@@ -45,6 +47,19 @@ export default function LocationItem() {
         return locationHierarchy[locationType] || null;
     };
 
+    // const getParentLocationType = (locationType) => {
+
+    //     const locationHierarchy = {
+    //         Plane: "Realm",
+    //         Realm: "Country",
+    //         Country: "Region",
+    //         Region: "Site",
+    //         Site: "Site",  // Nested sites allowed
+    //     };
+
+    //     return locationHierarchy[locationType] || null;
+    // };
+
     // Expand/collapse states
     const [showNotes, setShowNotes] = useState(false);
     const [showEvents, setShowEvents] = useState(false);
@@ -65,6 +80,20 @@ export default function LocationItem() {
             setLoading(false);
             return;
         }
+
+            if (formData.campaignID) {
+                fetch(`http://localhost:5050/campaigns/${formData.campaignID}`)
+                    .then(response => response.json())
+                    .then(data => setCampaignName(data.title))
+                    .catch(error => console.error("Failed to fetch campaign: ", error));
+            }
+        
+            if (formData.parentLocationID) {
+                fetch(`http://localhost:5050/locations/${formData.parentLocationID}`)
+                    .then(response => response.json())
+                    .then(data => setParentLocationName(data.name))
+                    .catch(error => console.error("Failed to fetch parent location: ", error));
+            }
 
         const fetchLocation = async () => {
             try {
@@ -99,7 +128,7 @@ export default function LocationItem() {
         };
 
         fetchLocation();
-    }, [id, isNew, campaignID, parentLocationID, locationType, locationState.state?.forceRefresh]);
+    }, [id, isNew, campaignID, formData.campaignID, parentLocationID, formData.parentLocationID, locationType, locationState.state?.forceRefresh]);
     
     const handleSave = async (newLocation) => {
         setEditMode(false);
@@ -163,6 +192,7 @@ export default function LocationItem() {
                     campaignID={formData.campaignID}
                     parentLocationID={isNew ? location?._id : formData.parentLocationID}
                     locationType={isNew ? getChildLocationType(formData.locationType) : formData.locationType}
+                    // parentLocationType={isNew ? formData.locationType : getParentLocationType(formData.locationType)}
                     existingLocation={location}
                     onSave={handleSave}
                     onCancel={handleCancel}
@@ -171,9 +201,9 @@ export default function LocationItem() {
                 <>
                     <h1 className="text-3xl font-bold">{location.name || "Unknown Location"}</h1>
                     <p className="text-lg italic">{location.description || "No description available."}</p>
-                    {/* <p><strong>Campaign ID:</strong> {formData.campaignID}</p>
-                    <p><strong>Parent Location ID:</strong> {formData.parentLocationID}</p>
-                    <p><strong>Location Type:</strong> {formData.locationType}</p> */}
+                    <p><strong>Campaign:</strong> {campaignName || "Unspecified Campaign"}</p>
+                    {formData.locationType !== "Plane" && (<p><strong>Parent Location:</strong> {parentLocationName || "Unspecified Parent Location"}</p>)}
+                    {/* <p><strong>Location Type:</strong> {formData.locationType}</p> */}
                     <div className="flex space-x-2 mt-4">
                         <button onClick={() => setEditMode(true)} className="bg-blue-600 text-white px-4 py-2 rounded">
                             Edit
@@ -209,7 +239,7 @@ export default function LocationItem() {
 
                     {/* Sublocations */}
                     <button onClick={() => setShowSublocations(!showSublocations)} className="mt-2 text-blue-600 underline">
-                        {getChildLocationType(formData.locationType)}s {showSublocations ? "▲" : "▼"}
+                        {getChildLocationType(formData.locationType) === "Country" ? ("Countries") : (`${getChildLocationType(formData.locationType)}s`)} {showSublocations ? "▲" : "▼"}
                     </button>
                     {showSublocations && <LocationList
                         parentLocationID={location?._id}

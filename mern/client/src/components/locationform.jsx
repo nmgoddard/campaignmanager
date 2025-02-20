@@ -20,6 +20,12 @@ export default function LocationForm({ campaignID, parentLocationID, locationTyp
             };
     });    
     
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const [campaigns, setCampaigns] = useState([]);
+    const [parentLocation, setParentLocation] = useState();
+    const [parentLocations, setParentLocations] = useState([]);
+
     useEffect(() => {
         if (existingLocation) {
             setFormData({
@@ -30,10 +36,39 @@ export default function LocationForm({ campaignID, parentLocationID, locationTyp
                 parentLocationID: existingLocation.parentLocationID || parentLocationID,
             });
         }
-    }, [existingLocation, locationType, campaignID, parentLocationID]);
 
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
+        // if (!parentLocation || !parentLocation.locationType) return;
+
+        fetch("http://localhost:5050/campaigns")
+            .then(response => response.json())
+            .then(data => {
+                console.log("Fetched campaigns: ", data);
+                setCampaigns(Array.isArray(data) ? data: []);
+            })
+            .catch(error => console.error("Failed to fetch Campaign: ", error));
+            
+        }, [existingLocation, locationType, campaignID, parentLocationID]);
+
+    useEffect(() => {
+        if (!parentLocationID) return;
+        
+            fetch(`http://localhost:5050/locations/${parentLocationID}`)
+                .then(response => response.json())
+                .then(data => setParentLocation(data))
+                .catch(error => console.error("Failed to fetch parent location: ", error));
+
+    }, [parentLocationID]);
+
+    useEffect(() => {
+        // if (parentLocation && parentLocation.locationType) {
+        if (!parentLocation || !parentLocation.locationType) return;
+
+        fetch(`http://localhost:5050/locations/campaign/${campaignID}/type/${parentLocation.locationType}`)
+            .then(response => response.json())
+            .then(data => setParentLocations(Array.isArray(data) ? data: []))
+            .catch(error => console.error("Failed to fetch parent location: ", error));
+        }, [parentLocation?.locationType, campaignID]);
+        //Apparently you don't need to track all of parentLocation if you're only using parentLocation.locationType
     
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -113,6 +148,36 @@ export default function LocationForm({ campaignID, parentLocationID, locationTyp
         <div className="p-4 border rounded-lg bg-white shadow-md">
             <h2 className="text-xl font-bold">Create New Location</h2>
             {error && <p className="text-red-500">{error}</p>}
+            <label>Campaign:</label>
+            <select
+                name="campaignID"
+                value={formData.campaignID}
+                onChange={handleChange}
+                className="border p-2 w-full rounded"
+            >
+                <option value="">Select a Campaign</option>
+                {campaigns.map(campaign => (
+                    <option key={campaign._id} value={campaign._id}>{campaign.title}</option>
+                ))}
+            </select>
+
+            {locationType !== "Plane" && (
+                <>
+                    <label>Parent Location:</label>
+                    <select
+                        name="parentLocationID"
+                        value={formData.parentLocationID}
+                        onChange={handleChange}
+                        className="border p-2 w-full rounded"
+                    >
+                        <option value="">Select a Parent Location</option>
+                        {parentLocations.map(location => (
+                            <option key={location._id} value={location._id}>{location.name}</option>
+                        ))}
+                    </select>
+                </>
+            )}
+
             <form onSubmit={handleSave} className="space-y-3">
                 <input
                     type="text"
