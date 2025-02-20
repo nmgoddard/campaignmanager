@@ -30,7 +30,7 @@ app.use(express.json());
 //Rate limiting DoS and Brute Force shield
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, //15 minutes
-  max: 100,   //100 requests per IP per WindowMS
+  max: 500,   //100 requests per IP per WindowMS
   handler: (req, res, next) => {
     console.warn(`Rate limit exceeded for IP: ${req.ip}`);
     res.status(429).json({ error: "Too many requests. Please try again later." });
