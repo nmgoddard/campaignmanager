@@ -16,6 +16,7 @@ import APISearch from "./components/search";
 import Rulebook from "./components/rulebook";
 import CharacterDisplay from "./components/characterdisplay";
 import SpellTable from "./components/spelltable";
+import LootTable from "./components/lootgenerator";
 
 const router = createBrowserRouter([
   {
@@ -115,6 +116,16 @@ const router = createBrowserRouter([
       {
         path: "/spelltable",
         element: <SpellTable/>
+      },
+    ],
+  },
+  {
+    path: "/lootgenerator",
+    element: <App />,
+    children: [
+      {
+        path: "/lootgenerator",
+        element: <LootTable/>
       },
     ],
   },

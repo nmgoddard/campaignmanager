@@ -29,8 +29,8 @@ export default function Navbar() {
         <NavLink to="/characterdisplay">
           CharacterDisplay
         </NavLink>
-        <NavLink to="/spelltable">
-          spelltable
+        <NavLink to="/lootgenerator">
+          LootTable
         </NavLink>
       </nav>
     </div>
