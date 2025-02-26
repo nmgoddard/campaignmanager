@@ -1,4 +1,12 @@
-// Helper function to roll multiple dice and sum the results
+/*=========================================
+*   Title: PlayerCharacterStats
+*   Author: Grimm_mmirG
+*   Date: 2025-25-01
+*
+*   This is for individual Gold per player
+*
+===========================================*/
+
 const rollDice = (numDice, dieSize) => {
     let total = 0;
     for (let i = 0; i < numDice; i++) {

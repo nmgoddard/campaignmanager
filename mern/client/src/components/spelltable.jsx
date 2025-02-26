@@ -1,21 +1,22 @@
 /*=========================== 
-*   Title: SpellTable
+*   Title: PlayerCharacterStats
 *   Author: Grimm_mmirG
-*   Date: 2025-02-03
+*   Date: 2025-26-02
 =============================*/
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
-const SpellTable = ({ selectedClass }) => {
+const SpellTable = ({ selectedClass, characterLevel }) => {
   const [spellsByLevel, setSpellsByLevel] = useState({});
   const [expandedLevels, setExpandedLevels] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Fetch spells when selectedClass changes
   useEffect(() => {
     if (!selectedClass) {
-      setSpellsByLevel({}); 
+      setSpellsByLevel({});
       return;
     }
 
@@ -55,74 +56,60 @@ const SpellTable = ({ selectedClass }) => {
     };
 
     fetchSpells();
-  }, [selectedClass]);
+  }, [selectedClass]); // Re-fetch spells when selectedClass changes
 
+  // Toggle expanded state for a specific spell level
   const toggleLevel = (level) => {
     setExpandedLevels((prev) => ({ ...prev, [level]: !prev[level] }));
   };
 
-  const filteredSpellsByLevel = Object.entries(spellsByLevel).reduce((acc, [level, spells]) => {
-    const filteredSpells = spells.filter((spell) =>
-      spell.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      level.toString().includes(searchQuery)
-    );
-    if (filteredSpells.length > 0) acc[level] = filteredSpells;
-    return acc;
-  }, {});
+  // Map spell levels to the character levels at which they become available
+  const spellLevelAvailability = {
+    0: 1, // Cantrips (level 0) are available at character level 1
+    1: 1, // 1st-level spells at level 1
+    2: 3, // 2nd-level spells at level 3
+    3: 5, // 3rd-level spells at level 5
+    4: 7, // 4th-level spells at level 7
+    5: 9, // 5th-level spells at level 9
+    6: 11, // 6th-level spells at level 11
+    7: 13, // 7th-level spells at level 13
+    8: 15, // 8th-level spells at level 15
+    9: 17, // 9th-level spells at level 17
+  };
+
+  // Memoize filtered spells based on searchQuery and characterLevel
+  const filteredSpellsByLevel = useMemo(() => {
+    return Object.entries(spellsByLevel).reduce((acc, [level, spells]) => {
+      const filteredSpells = spells.filter(
+        (spell) =>
+          spell.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          level.toString().includes(searchQuery)
+      );
+
+      // Only include spells if the character has reached the required level
+      if (filteredSpells.length > 0 && characterLevel >= spellLevelAvailability[level]) {
+        acc[level] = filteredSpells;
+      }
+      return acc;
+    }, {});
+  }, [spellsByLevel, searchQuery, characterLevel]); // Re-run when characterLevel changes
 
   return (
-    <div className="spell-table">
-      <h2 className="text-xl font-bold mb-4">Spells for {selectedClass}</h2>
-      <div className="relative mb-4">
-        <input
-          type="text"
-          placeholder="Search spells by name or level..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-2 border rounded pr-10"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {isLoading && <p className="text-center">Loading spells...</p>}
-      {error && <p className="text-center text-red-500">{error}</p>}
-
-      {!isLoading && !error && Object.entries(filteredSpellsByLevel).length === 0 && (
-        <p className="text-center">No spells found.</p>
+    <div className="spell-table p-6 bg-white rounded-lg shadow-md">
+      {/* Loading State */}
+      {isLoading && (
+        <p className="text-center text-gray-600">Loading spells...</p>
       )}
-
-      {Object.entries(filteredSpellsByLevel).map(([level, spells]) => (
-        <div key={level} className="spell-level mb-4">
-          <button
-            onClick={() => toggleLevel(level)}
-            className="text-left w-full bg-gray-200 p-2 rounded hover:bg-gray-300 transition-colors"
-          >
-            {expandedLevels[level] ? "▼" : "▲"} Level {level} Spells
-          </button>
-          {expandedLevels[level] && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-              {spells.map((spell) => (
-                <div key={spell.index} className="p-4 border rounded shadow hover:shadow-md transition-shadow">
-                  <h3 className="font-bold">{spell.name}</h3>
-                  <p>Level: {spell.level}</p>
-                  <p>School: {spell.school.name}</p>
-                  <p>Casting Time: {spell.casting_time}</p>
-                  <p>Range: {spell.range}</p>
-                  <p>Duration: {spell.duration}</p>
-                  <p>Components: {spell.components.join(", ")}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+  
+      {/* Error State */}
+      {error && (
+        <p className="text-center text-red-500">{error}</p>
+      )}
+  
+      {/* No Spells Found */}
+      {!isLoading && !error && Object.entries(filteredSpellsByLevel).length === 0 && (
+        <p className="text-center text-gray-600">No spells found.</p>
+      )}
     </div>
   );
 };
